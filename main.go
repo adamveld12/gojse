@@ -41,15 +41,21 @@ func main() {
 
 		started := time.Now()
 		fmt.Printf("New block (ID: %d) starting - %d hash(es) found this session\n", block.ID, hashesInSession)
-		hash, nonce, err := MineBlock(block)
+		mineResult, err := MineBlock(block)
 		if err != nil {
 			log.Printf("An error occurred while mining %+v", err)
 			continue
 		}
 		ended := time.Since(started)
-		fmt.Printf("Mining block %d took %d seconds\n\thash: %s\n\tnonce: %s\n\n", block.ID, ended/time.Second, hash, nonce)
+		fmt.Printf("Block %d mined in %v seconds.\nhash: %s\nnonce: %s\ntotal hashes generated: %d\n\n",
+			block.ID,
+			ended.Seconds(),
+			mineResult.Hash,
+			mineResult.Nonce,
+			mineResult.TotalHashes,
+		)
 
 		hashesInSession++
-		go Submit(block, nonce, hash, user.UID)
+		go Submit(block, mineResult.Nonce, mineResult.Hash, user.UID)
 	}
 }

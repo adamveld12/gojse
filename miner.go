@@ -1,14 +1,18 @@
 package main
 
 import (
+	"bytes"
 	"crypto/sha256"
+	"encoding/binary"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"math/rand"
 	"runtime"
 	"sync"
+	"time"
 )
+
+var nonceStr = []byte("*nonce*")
 
 func Mine(block []byte) []byte {
 	hash := sha256.Sum256(block)
@@ -19,61 +23,80 @@ func Mine(block []byte) []byte {
 	return nil
 }
 
-type work struct {
-	block []byte
-	nonce string
-}
-
 type result struct {
 	nonce     string
 	hash      string
 	hashCount int
 }
 
-func MineBlock(block *Block) (string, string, error) {
-	// max # of threads
+type MineResult struct {
+	Hash        string
+	Nonce       string
+	TotalHashes int
+}
+
+func MineBlock(block *Block) (MineResult, error) {
 	count := runtime.NumCPU()
-	found := false
-	startNum := rand.Intn(99999999)
-	workQueue := make(chan work)
 	results := make(chan result)
 	quit := make(chan bool)
+	stats := make(chan int)
 	wg := &sync.WaitGroup{}
 
 	for threads := count; threads > 0; threads-- {
 		wg.Add(1)
-		go asyncMine(workQueue, results, quit, wg)
+		go asyncMine(*block, stats, results, quit, wg)
 	}
 
-	for x := startNum; !found; x++ {
-		block.Nonce = fmt.Sprintf("%d", x)
-		targetText, _ := json.Marshal(block)
+	hps := 0
+	totalHashes := 0
+	started := time.Now()
+	for {
 		select {
 		case r := <-results:
 			close(quit)
-			close(workQueue)
-			close(results)
 			wg.Wait()
-			return r.hash, r.nonce, nil
-		case workQueue <- work{targetText, block.Nonce}:
+			close(results)
+			close(stats)
+			return MineResult{
+				Hash:        r.hash,
+				Nonce:       r.nonce,
+				TotalHashes: totalHashes,
+			}, nil
+		case hashes := <-stats:
+			hps += hashes
+			totalHashes += hashes
+			if time.Since(started) > time.Second {
+				fmt.Printf("\t%d Hashes per second.\n", hps)
+				started = time.Now()
+				hps = 0
+			}
 		}
 	}
-
-	return "", "", errors.New("FUC")
 }
 
-func asyncMine(workQueue <-chan work, results chan<- result, quit <-chan bool, wg *sync.WaitGroup) {
+func asyncMine(block Block, stats chan<- int, results chan<- result, quit <-chan bool, wg *sync.WaitGroup) {
 	defer wg.Done()
-	totalHashes := 0
+	found := false
+	hashCount := 0
+	startNum := rand.Int63n(99999999)
+	block.Nonce = "*nonce*"
+	sourceText, _ := json.Marshal(block)
+	buf := make([]byte, binary.MaxVarintLen64)
 
-	for work := range workQueue {
+	for x := startNum; !found; x++ {
 		select {
 		case <-quit:
 			return
+		case stats <- hashCount:
+			hashCount = 0
 		default:
-			totalHashes++
-			if hash := Mine(work.block); hash != nil {
-				results <- result{nonce: work.nonce, hash: fmt.Sprintf("%x", hash), hashCount: totalHashes}
+			hashCount++
+			binary.PutVarint(buf, x)
+			targetText := bytes.Replace(sourceText, nonceStr, buf, 1)
+			if hash := Mine(targetText); hash != nil {
+				select {
+				case results <- result{nonce: fmt.Sprintf("%d", x), hash: fmt.Sprintf("%x", hash), hashCount: hashCount}:
+				}
 				return
 			}
 		}
