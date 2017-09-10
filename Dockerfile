@@ -1,4 +1,4 @@
-from alpine
+FROM alpine
 
 ENV JSEMINE_USERNAME ""
 ENV JSEMINE_PASSWORD ""
