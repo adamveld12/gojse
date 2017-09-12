@@ -29,21 +29,22 @@ type Block struct {
 }
 
 type User struct {
-	UID      int    `json:"uid"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	UID   int    `json:"uid"`
+	Email string `json:"email"`
+	Name  string `json:"name"`
 }
 
 type submitStruct struct {
 	BlockID int    `json:"block"`
 	Hash    string `json:"hash"`
 	Nonce   string `json:"nonce"`
-	UserID  int    `json:"uid"`
-	SiteID  string `json:"siteId"`
+	UserID  int    `json:"pubid"`
+	SiteID  string `json:"siteid"`
+	Uniq    string `json:"uniq,omitempty"`
 }
 
 func Login(email, password string) (*User, error) {
-	payload := fmt.Sprintf("{ \"email\": \"%s\", \"password\": \"%s\"}", email, password)
+	payload := fmt.Sprintf("{ \"email\": \"%s\", \"password\": \"%s\", \"initial\":1}", email, password)
 	req, err := http.NewRequest("POST", loginURL, bytes.NewBufferString(payload))
 	req.Header.Set("Content-Type", "application/json")
 	if err != nil {
@@ -93,13 +94,19 @@ func Fetch() (*Block, error) {
 	return &block, nil
 }
 
+func Save() error {
+	return nil
+
+}
+
 func Submit(block *Block, nonce, hash string, uid int) error {
 	submission := submitStruct{
 		block.ID,
 		hash,
 		nonce,
 		uid,
-		"Publisher Mining",
+		"Platform Mining",
+		"",
 	}
 
 	payload, _ := json.Marshal(submission)

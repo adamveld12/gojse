@@ -9,16 +9,16 @@ import (
 )
 
 func main() {
-	username := os.Getenv("JSEMINE_USERNAME")
-	password := os.Getenv("JSEMINE_PASSWORD")
+	username := os.Getenv("GOJSE_USERNAME")
+	password := os.Getenv("GOJSE_PASSWORD")
 
 	if username == "" {
-		fmt.Println("JSEMINE_USERNAME envvar must be specified.")
+		fmt.Println("GOJSE_USERNAME envvar must be specified.")
 		return
 	}
 
 	if password == "" {
-		fmt.Println("JSEMINE_PASSWORD envvar must be specified.")
+		fmt.Println("GOJSE_PASSWORD envvar must be specified.")
 		return
 	}
 

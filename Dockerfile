@@ -1,13 +1,13 @@
 FROM alpine
 
-ENV JSEMINE_USERNAME ""
-ENV JSEMINE_PASSWORD ""
+ENV GOJSE_USERNAME ""
+ENV GOJSE_PASSWORD ""
 
 WORKDIR /app
 
 RUN apk add --update ca-certificates \
   && rm -rf /var/cache/apk/*
 
-COPY ./jseminer /app/
+COPY ./gojse /app/
 
-CMD '/app/jseminer'
+CMD '/app/gojse'
