@@ -56,6 +56,8 @@ func main() {
 		)
 
 		hashesInSession++
-		go Submit(block, mineResult.Nonce, mineResult.Hash, user.UID)
+		if err := Submit(block, mineResult.Nonce, mineResult.Hash, user.UID); err != nil {
+			log.Println("ERROR:", err.Error())
+		}
 	}
 }

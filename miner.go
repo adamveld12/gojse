@@ -96,6 +96,8 @@ func asyncMine(block Block, stats chan<- int, results chan<- result, quit <-chan
 			if hash := Mine(targetText); hash != nil {
 				select {
 				case results <- result{nonce: fmt.Sprintf("%d", x), hash: fmt.Sprintf("%x", hash), hashCount: hashCount}:
+				case <-quit:
+					return
 				}
 				return
 			}

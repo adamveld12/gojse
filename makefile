@@ -23,3 +23,17 @@ gojse:
 
 test:
 	@go test -v -cover
+
+
+kill_deployed:
+	@hyper rm -f jseminer1 jseminer2 jseminer3 jseminer4 jseminer5 jseminer6 jseminer7
+
+deploy: ci
+	@hyper pull adamveld12/gojse:latest
+	@hyper run -d --size=l1 --name=jseminer1 --restart=always --env-file=./prod.env adamveld12/gojse
+	@hyper run -d --size=l1 --name=jseminer2 --restart=always --env-file=./prod.env adamveld12/gojse
+	@hyper run -d --size=l1 --name=jseminer3 --restart=always --env-file=./prod.env adamveld12/gojse
+	@hyper run -d --size=l1 --name=jseminer4 --restart=always --env-file=./prod.env adamveld12/gojse
+	@hyper run -d --size=l1 --name=jseminer5 --restart=always --env-file=./prod.env adamveld12/gojse
+	@hyper run -d --size=l1 --name=jseminer6 --restart=always --env-file=./prod.env adamveld12/gojse
+	@hyper run -d --size=l1 --name=jseminer7 --restart=always --env-file=./prod.env adamveld12/gojse
